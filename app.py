@@ -1,23 +1,21 @@
-# 🌳 MangoAI – KML + Auto Satellite Tree Counter
+# 🌳 MangoAI – Auto Tree Counter (Images + KML)
 
 import streamlit as st
 from PIL import Image, ImageDraw
-import tempfile, os, time, io
+import io
 import pandas as pd
 import requests
 import xml.etree.ElementTree as ET
 
 # ── CONFIG ─────────────────────────────────────────
 
-GOOGLE_API_KEY = "YOUR_API_KEY_HERE"   # 🔑 replace this
+GOOGLE_API_KEY = "YOUR_API_KEY_HERE"  # 🔑 Replace with your key
 
-# ── PAGE ───────────────────────────────────────────
+st.set_page_config(page_title="MangoAI Tree Counter", layout="wide")
 
-st.set_page_config(page_title="MangoAI Auto Counter", layout="wide")
+st.title("🌳 MangoAI – Tree Detection & Counter")
 
-st.title("🌳 MangoAI – Auto Tree Counter (KML Supported)")
-
-# ── LOAD MODEL ─────────────────────────────────────
+# ── LOAD MODEL (FIXED INDENTATION) ─────────────────
 
 @st.cache_resource
 def load_model():
@@ -108,7 +106,7 @@ mode = st.radio("Select Input Mode", ["📷 Upload Images", "📍 Upload KML (Au
 
 confidence = st.slider("Detection Confidence", 0.1, 0.9, 0.35, 0.05)
 
-# ── MODE 1: IMAGE UPLOAD ───────────────────────────
+# ── IMAGE MODE ─────────────────────────────────────
 
 if mode == "📷 Upload Images":
 uploaded_files = st.file_uploader("Upload Images", type=["jpg","png"], accept_multiple_files=True)
@@ -116,6 +114,7 @@ uploaded_files = st.file_uploader("Upload Images", type=["jpg","png"], accept_mu
 ```
 if uploaded_files:
     total = 0
+    results = []
 
     for f in uploaded_files:
         image = Image.open(f)
@@ -126,10 +125,15 @@ if uploaded_files:
         st.image(annotated, caption=f"{f.name} → {count} trees")
         total += count
 
+        results.append({"Image": f.name, "Trees": count})
+
     st.success(f"🌳 Total Trees: {total}")
+
+    df = pd.DataFrame(results)
+    st.dataframe(df)
 ```
 
-# ── MODE 2: KML AUTO PROCESS ───────────────────────
+# ── KML MODE ───────────────────────────────────────
 
 elif mode == "📍 Upload KML (Auto Detect)":
 kml_file = st.file_uploader("Upload KML file", type=["kml"])
