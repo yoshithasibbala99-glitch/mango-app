@@ -1,4 +1,4 @@
-# 🌳 MangoAI – Auto Tree Counter (Images + KML)
+# 🌳 MangoAI – Tree Counter (FREE Satellite + KML)
 
 import streamlit as st
 from PIL import Image, ImageDraw
@@ -7,15 +7,12 @@ import pandas as pd
 import requests
 import xml.etree.ElementTree as ET
 
-# ── CONFIG ─────────────────────────────────────────
-
-GOOGLE_API_KEY = "YOUR_API_KEY_HERE"  # 🔑 Replace with your key
+# ── PAGE ───────────────────────────────────────────
 
 st.set_page_config(page_title="MangoAI Tree Counter", layout="wide")
+st.title("🌳 MangoAI – Tree Detection & Counter (FREE MODE)")
 
-st.title("🌳 MangoAI – Tree Detection & Counter")
-
-# ── LOAD MODEL (FIXED INDENTATION) ─────────────────
+# ── LOAD MODEL ─────────────────────────────────────
 
 @st.cache_resource
 def load_model():
@@ -87,13 +84,18 @@ while lat < lat_max:
 return grid
 ```
 
-# ── SATELLITE IMAGE FETCH ──────────────────────────
+# ── FREE SATELLITE IMAGE (ESRI) ────────────────────
 
-def get_satellite_image(lat, lon, zoom=19):
-url = f"https://maps.googleapis.com/maps/api/staticmap?center={lat},{lon}&zoom={zoom}&size=640x640&maptype=satellite&key={GOOGLE_API_KEY}"
-response = requests.get(url)
+def get_satellite_image(lat, lon):
+delta = 0.001  # area size
 
 ```
+bbox = f"{lon-delta},{lat-delta},{lon+delta},{lat+delta}"
+
+url = f"https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={bbox}&bboxSR=4326&size=640,640&imageSR=4326&format=png"
+
+response = requests.get(url)
+
 if response.status_code != 200:
     return None
 
@@ -103,7 +105,6 @@ return Image.open(io.BytesIO(response.content))
 # ── UI ─────────────────────────────────────────────
 
 mode = st.radio("Select Input Mode", ["📷 Upload Images", "📍 Upload KML (Auto Detect)"])
-
 confidence = st.slider("Detection Confidence", 0.1, 0.9, 0.35, 0.05)
 
 # ── IMAGE MODE ─────────────────────────────────────
